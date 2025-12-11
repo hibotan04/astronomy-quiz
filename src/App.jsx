@@ -309,12 +309,7 @@ const QUIZ_DATA = [
         id: "p3-32",
         q: "根據目前的宇宙論，宇宙的組成成分中，佔比由多到少分別是哪些？（請寫出名稱與大約比例）",
         a: "回答：\n1. 暗能量（Dark Energy）：約 68% （推動宇宙加速膨脹）。\n2. 暗物質（Dark Matter）：約 27% （提供額外的重力）。\n3. 一般物質（重子物質）：約 5% （我們看得到的星星、氣體和人類）。"
-      }
-    ]
-  },
-  {
-    section: "四、進階主題測驗",
-    questions: [
+      },
       {
         id: "p4-1",
         q: "【隕石】隕石主要分為哪三種？",
@@ -492,7 +487,7 @@ export default function App() {
           <div>
             <h1 className="text-xl font-bold text-gray-900 flex items-center gap-2">
               <BookOpen className="w-6 h-6 text-blue-600" />
-              天文學題庫複習
+              認識星空 考古題 總結
             </h1>
             <p className="text-sm text-gray-500 mt-1">
               完成度: {stats.answered} / {stats.total} 題
