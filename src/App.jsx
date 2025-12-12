@@ -1,5 +1,5 @@
 import React, { useState, useMemo } from 'react';
-import { Eye, EyeOff, CheckCircle, XCircle, RefreshCw, BookOpen, AlertCircle } from 'lucide-react';
+import { Eye, EyeOff, CheckCircle, XCircle, RefreshCw, BookOpen, AlertCircle, RotateCcw, ArrowRight, Trash2 } from 'lucide-react';
 
 const QUIZ_DATA = [
   {
@@ -436,6 +436,8 @@ export default function App() {
   const [userStatus, setUserStatus] = useState({});
   // View mode: 'all' or 'review'
   const [viewMode, setViewMode] = useState('all');
+  // Confirm state for reset
+  const [resetConfirm, setResetConfirm] = useState(false);
 
   // Toggle answer visibility
   const toggleReveal = (id) => {
@@ -453,6 +455,45 @@ export default function App() {
     }));
     // If grading, auto-reveal just in case, though usually they reveal first
     setRevealedState(prev => ({ ...prev, [id]: true }));
+  };
+
+  // Reset everything with safety double-click
+  const handleResetAll = () => {
+    if (resetConfirm) {
+      // Execute reset
+      setRevealedState({});
+      setUserStatus({});
+      setViewMode('all');
+      setResetConfirm(false);
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    } else {
+      // Show confirm state
+      setResetConfirm(true);
+      // Auto cancel after 4 seconds if not clicked
+      setTimeout(() => setResetConfirm(false), 4000);
+    }
+  };
+
+  // Retry wrong questions loop
+  const handleRetryWrong = () => {
+    // Hide answers for all currently marked 'wrong'
+    const newRevealedState = { ...revealedState };
+
+    // Iterate through all user statuses
+    Object.keys(userStatus).forEach(key => {
+      // Only hide answers for questions that are CURRENTLY wrong
+      if (userStatus[key] === 'wrong') {
+        newRevealedState[key] = false;
+      }
+    });
+
+    setRevealedState(newRevealedState);
+
+    // Switch to review mode to see only wrong ones
+    setViewMode('review');
+
+    // Scroll to top to start fresh
+    window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
   // Helper to get counts
@@ -494,14 +535,30 @@ export default function App() {
             </p>
           </div>
 
-          <div className="flex items-center gap-3 text-sm">
+          <div className="flex flex-wrap items-center gap-2 sm:gap-3 text-sm">
             <div className="px-3 py-1 bg-green-100 text-green-700 rounded-full flex items-center gap-1">
               <CheckCircle className="w-4 h-4" /> {stats.correct}
             </div>
             <div className="px-3 py-1 bg-red-100 text-red-700 rounded-full flex items-center gap-1">
               <XCircle className="w-4 h-4" /> {stats.wrong}
             </div>
-            <div className="h-8 w-px bg-gray-200 mx-1"></div>
+            <div className="h-8 w-px bg-gray-200 mx-1 hidden sm:block"></div>
+
+            {/* Reset Button (Double click safety) */}
+            <button
+              onClick={handleResetAll}
+              className={`flex items-center gap-1 px-3 py-2 rounded-lg transition-all duration-200 ${resetConfirm
+                  ? 'bg-red-600 text-white shadow-md animate-pulse'
+                  : 'bg-gray-100 hover:bg-gray-200 text-gray-600'
+                }`}
+              title="全部重置"
+            >
+              {resetConfirm ? <Trash2 className="w-4 h-4" /> : <RotateCcw className="w-4 h-4" />}
+              <span className="hidden sm:inline">
+                {resetConfirm ? "確定重置?" : "重置"}
+              </span>
+            </button>
+
             <button
               onClick={() => setViewMode(viewMode === 'all' ? 'review' : 'all')}
               className={`flex items-center gap-2 px-4 py-2 rounded-lg transition-all font-medium ${viewMode === 'review'
@@ -642,10 +699,27 @@ export default function App() {
         {viewMode === 'all' && stats.total === 0 && (
           <div className="text-center py-12">資料載入中...</div>
         )}
+
+        {/* Retry Wrong Answers Action Area */}
+        {stats.wrong > 0 && (
+          <div className="mt-12 p-6 bg-red-50 rounded-xl border border-red-100 text-center">
+            <h3 className="text-lg font-bold text-red-800 mb-2">還有 {stats.wrong} 題需要複習</h3>
+            <p className="text-red-600 mb-4 text-sm">
+              點擊下方按鈕，將「答錯」的題目重新遮住解答，再次挑戰。
+            </p>
+            <button
+              onClick={handleRetryWrong}
+              className="inline-flex items-center gap-2 px-6 py-3 bg-red-600 text-white rounded-lg shadow-lg hover:bg-red-700 transition-all font-medium"
+            >
+              <RefreshCw className="w-5 h-5" />
+              重新複習錯題 (再挑戦)
+            </button>
+          </div>
+        )}
       </div>
 
       {/* Footer Info */}
-      <div className="max-w-3xl mx-auto mt-12 text-center text-gray-400 text-sm pb-8">
+      <div className="max-w-3xl mx-auto mt-8 text-center text-gray-400 text-sm pb-8">
         <p>點擊「答錯」的題目將會被加入複習清單。</p>
       </div>
     </div>
